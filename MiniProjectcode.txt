@@ -1,0 +1,142 @@
+import numpy as np
+from matplotlib import pyplot as plt
+# Given a row vector x, return the two norm of x
+def twonorm(x):
+    return np.sqrt(np.matmul(x, np.transpose(x)))
+# Backsubstitution Module
+def backsub(A,b):
+    R = np.float64(np.copy(A))
+    n = R.shape[1]
+    x = np.zeros(n)
+    x[n-1] = b[n-1]/R[n-1, n-1]
+    for i in range(n-1):
+        subterm = np.dot(x[n-1-i:], R[n-2-i, n-1-i:])
+        x[n-2-i] = (b[n-2-i]-subterm)/R[n-2-i, n-2-i]
+    return x  
+R = np.array([[-1, 1, 1, 2, 3], [0, -1, 1, 1, 2], [0, 0, -1, 1, 1], [0,0,0,-1, 1],[0,0,0,0,-1]])
+b = np.array([[27], [15], [6], [1], [-5]])
+x = backsub(R, b)
+print("This is R: ")
+print(R)
+print("This is b: ")
+print(b)
+print("This is the approximate solution x: ")
+print(x)
+diff = np.matmul(R, x) - np.transpose(b)
+tn = twonorm(diff)
+print("The two norm of Rx - b is ")
+print(tn)
+relerr = tn/twonorm(np.transpose(b))
+print("The relative error is therefore given by ")
+print(relerr)
+def Householder(A):
+    m = A.shape[0]
+    n = A.shape[1]
+    R = np.float64(np.copy(A))
+    Qstar = np.identity(m)
+    nend = n
+    if m == n:
+        nend = n-1
+    for k in range(nend):
+        x = R[k:m, k]
+        e1 = np.identity(len(x))[:, 0]
+        vk = x + np.dot(np.sign(x[0])*twonorm(x),e1)
+        vk = [vk/twonorm(vk)]
+        outer = np.matmul(np.transpose(vk), np.conj(vk))
+        R[k:m, k:n] = R[k:m, k:n] - 2*np.matmul(outer, R[k:m, k:n])
+        Qstar[k:m, :] = Qstar[k:m, :] - 2*np.matmul(outer, Qstar[k:m, :])
+    Q = np.transpose(np.conj(Qstar))
+    return [Q, R]
+# Vandermonde Matrix
+def van(a,b,m,n):
+    x = np.linspace(a, b, m, dtype = float)
+    V = np.zeros((m,n))
+    for i in range (m):
+        for j in range(n):
+            V[i,j] = np.power(x[i], j)
+    return V
+V = van(0, 3, 4, 4)
+y = [[1, 2, 3, 1]]
+H = Householder(V)
+Q = H[0]
+R = H[1]
+print("This is Q: ")
+print(Q)
+print("This is R: ")
+print(R)
+Y = np.matmul(np.transpose(np.conj(Q)), np.transpose(y))
+a = backsub(R,Y)
+print("This is the solution to the system Ra = Y, so that a = ")
+print(a)
+# plots
+x = np.linspace(0,3,4)
+xM = np.linspace(0,3,257)
+poly = np.matmul(van(0,3,257,4), np.transpose(a))
+plt.title("Plot of Predicted Polynomial")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.plot(x, y[0], 'o')
+plt.plot(xM, poly)
+plt.show()
+V = van(0, 3, 7, 4)
+y = [[1, 2, 3, 1, 0, 2, 1]]
+H = Householder(V)
+Q = H[0]
+R = H[1]
+Y = np.matmul(np.transpose(np.conj(Q)), np.transpose(y))
+a = backsub(R,Y)
+
+# plots
+x = np.linspace(0,3,7)
+xM = np.linspace(0,3,257)
+poly = np.matmul(van(0,3,257,4), np.transpose(a))
+plt.title("Plot of Predicted Cubic")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.plot(x, y[0], 'o')
+plt.plot(xM, poly)
+plt.show()
+V = van(-3, 3, 15, 15)
+points = V[:,1]
+y = np.zeros(len(points))
+for i in range(len(points)):
+    y[i] = 1/(1 + np.power(points[i],2))
+    
+H = Householder(V)
+Q = H[0]
+R = H[1]
+Y = np.matmul(np.transpose(np.conj(Q)), np.transpose(y))
+a = backsub(R,Y)
+
+# plots
+x = np.linspace(-3,3,15)
+xM = np.linspace(-3,3,257)
+poly = np.matmul(van(-3,3,257,15), np.transpose(a))
+plt.title("Plot of Polynomial of Degree 14 to Predict Reciprocal Function")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.plot(x, y, 'o')
+plt.plot(xM, poly)
+plt.show()
+V = van(-3, 3, 45, 15)
+points = V[:,1]
+y = np.zeros(len(points))
+for i in range(len(points)):
+    y[i] = 1/(1 + np.power(points[i],2))
+    
+H = Householder(V)
+Q = H[0]
+R = H[1]
+Y = np.matmul(np.transpose(np.conj(Q)), np.transpose(y))
+a = backsub(R,Y)
+
+# plots
+x = np.linspace(-3,3,45)
+xM = np.linspace(-3,3,257)
+poly = np.matmul(van(-3,3,257,15), np.transpose(a))
+plt.title("Plot of Polynomial of Degree 14 to Predict Reciprocal Function")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.plot(x, y, 'o')
+plt.plot(xM, poly)
+plt.show()
